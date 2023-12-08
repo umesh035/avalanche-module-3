@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MyToken is ERC20 {
+    address public tokenOwner;
+
+    event TokensMoved(address indexed sender, address indexed receiver, uint256 amount);
+
+    modifier onlyTokenOwner() {
+        require(msg.sender == tokenOwner, "This action can only be performed by the owner.");
+        _;
+    }
+
+    constructor(
+        string memory myTokenName,
+        string memory myTokenSymbol,
+        uint256 initialTokenSupply
+    ) ERC20(myTokenName, myTokenSymbol) {
+        tokenOwner = msg.sender;
+        _mint(tokenOwner, initialTokenSupply);
+    }
+
+    function MINT(address t0_add, uint256 tokenQuantity) external onlyTokenOwner {
+        _mint(t0_add, tokenQuantity);
+        emit TokensMoved(address(0), t0_add, tokenQuantity);
+    }
+
+    function BURN(uint256 tokenQuantity) external {
+        require(balanceOf(msg.sender) >= tokenQuantity, "Insufficient balance for this operation");
+        _burn(msg.sender, tokenQuantity);
+        emit TokensMoved(msg.sender, address(0), tokenQuantity);
+    }
+
+    function TRANSFER(address tokenReceiver, uint256 tokenAmount) external returns (bool) {
+        require(tokenReceiver != address(0), "Invalid recipient address");
+        _transfer(msg.sender, tokenReceiver, tokenAmount);
+        emit TokensMoved(msg.sender, tokenReceiver, tokenAmount);
+        return true;
+    }
+}
